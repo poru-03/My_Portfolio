@@ -104,4 +104,45 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.setProperty('--mouse-y', `${y}px`);
         });
     });
+
+    // 6. Two-stage Card Scroll Animation (IntersectionObserver)
+    const cardsToAnimate = document.querySelectorAll('.project-card, .timeline-content, .skill-category, .contact-card');
+    
+    // Add base class for animation
+    cardsToAnimate.forEach(card => card.classList.add('animate-card'));
+
+    let staggerTimeout = null;
+    let cardsInCurrentBatch = [];
+
+    const cardObserverOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.15 // Trigger when 15% visible
+    };
+
+    const cardObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                cardsInCurrentBatch.push(entry.target);
+                // Only animate once
+                observer.unobserve(entry.target);
+            }
+        });
+
+        if (cardsInCurrentBatch.length > 0 && !staggerTimeout) {
+            staggerTimeout = setTimeout(() => {
+                // Apply 'card-visible' with a slight stagger for simultaneous cards
+                cardsInCurrentBatch.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('card-visible');
+                    }, index * 90); // ~90ms stagger
+                });
+                
+                cardsInCurrentBatch = [];
+                staggerTimeout = null;
+            }, 50);
+        }
+    }, cardObserverOptions);
+
+    cardsToAnimate.forEach(card => cardObserver.observe(card));
 });
